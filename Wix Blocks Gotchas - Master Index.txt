@@ -1,0 +1,66 @@
+# Wix Blocks Gotchas - Master Index
+
+## Overview
+Complete index of all 200 documented Wix Blocks gotchas, limitations, and workarounds.
+
+### Total Statistics
+- **Total Issues**: 200
+- **High Severity**: 81
+- **Medium Severity**: 102
+- **Low Severity**: 17
+
+Last updated: 2025-07-13
+
+---
+
+## Category Indexes
+
+### [Component Limitations](component-limitations.md)
+Restrictions on components, repeaters, and UI elements
+- Total: 56 | High: 23 | Medium: 29 | Low: 4
+
+### [API Restrictions](api-restrictions.md)
+Missing APIs, method limitations, and platform constraints
+- Total: 44 | High: 17 | Medium: 21 | Low: 6
+
+### [Data Handling](data-handling.md)
+Data binding, collections, and state management problems
+- Total: 39 | High: 15 | Medium: 21 | Low: 3
+
+### [HTML Display](html-display.md)
+HTML rendering, content display, and visual presentation issues
+- Total: 30 | High: 20 | Medium: 9 | Low: 1
+
+### [Development Workflow](development-workflow.md)
+Preview, debugging, and development environment issues
+- Total: 23 | High: 5 | Medium: 16 | Low: 2
+
+### [Platform Architecture](platform-architecture.md)
+Core platform design decisions and constraints
+- Total: 4 | High: 1 | Medium: 3 | Low: 0
+
+### [Deployment Issues](deployment-issues.md)
+Publishing, versioning, and deployment problems
+- Total: 4 | High: 0 | Medium: 3 | Low: 1
+
+## Quick Access
+
+- 📌 [Quick Reference - Top 20 Issues](quick-reference.md)
+- 🎨 [Display Methods](display-methods.md) - Priority for UI development
+- 📊 [Master CSV Data](../wixresearch.csv) - Raw data source
+
+## How to Use This Index
+
+1. **Starting a new project?** Read the [Quick Reference](quick-reference.md) first
+2. **Working on UI?** Check [Display Methods](display-methods.md)
+3. **Hit a limitation?** Browse the relevant category index
+4. **Need specifics?** Search the [Master CSV](../wixresearch.csv)
+
+## Contributing
+
+Found a new gotcha? Add it to the master CSV with:
+- Unique ID (WB-XXX format)
+- Clear problem description
+- Working solution or workaround
+- Severity rating (high/medium/low)
+- Relevant tags

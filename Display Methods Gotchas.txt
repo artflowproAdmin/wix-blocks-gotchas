@@ -1,0 +1,848 @@
+# Display Methods Gotchas
+
+## Overview
+Total issues: 114
+High severity: 39 | Medium: 60 | Low: 15
+
+Last updated: 2025-07-13
+
+---
+
+## Table of Contents
+- [Browser sandbox](#browser-sandbox) (1 issues)
+- [Content display](#content-display) (10 issues)
+- [Custom elements](#custom-elements) (4 issues)
+- [Dynamic content](#dynamic-content) (5 issues)
+- [Element creation](#element-creation) (5 issues)
+- [External scripts](#external-scripts) (1 issues)
+- [General](#general) (2 issues)
+- [Html component](#html-component) (21 issues)
+- [Html rendering](#html-rendering) (1 issues)
+- [Iframe](#iframe) (9 issues)
+- [Image](#image) (2 issues)
+- [Layout](#layout) (2 issues)
+- [Media queries](#media-queries) (3 issues)
+- [Preview](#preview) (4 issues)
+- [Rendering bugs](#rendering-bugs) (4 issues)
+- [Repeater](#repeater) (6 issues)
+- [Responsive](#responsive) (6 issues)
+- [Rich content](#rich-content) (2 issues)
+- [Script execution](#script-execution) (1 issues)
+- [Security](#security) (4 issues)
+- [State management](#state-management) (1 issues)
+- [Style attribute](#style-attribute) (3 issues)
+- [Svg](#svg) (3 issues)
+- [Text elements](#text-elements) (4 issues)
+- [Type checking](#type-checking) (1 issues)
+- [Widget communication](#widget-communication) (1 issues)
+- [Widget styling](#widget-styling) (4 issues)
+- [Widgets](#widgets) (4 issues)
+
+---
+
+## High Severity Issues
+
+### Browser sandbox
+### External content blocked by sandbox [Row 115]
+- **Problem**: Browser blocks external resources in preview
+- **Solution**: Test with published site
+- **Tags**: #browser #sandbox #preview
+
+### Content display
+### Cannot inject HTML into Text elements [Row 24]
+- **Problem**: Text elements only accept plain text, HTML tags shown as literal text
+- **Solution**: Use HTML Component or create custom element
+- **Code**: `$w('#html1').src = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)`
+- **Tags**: #text #html #display
+
+### Custom elements
+### Custom elements not cleaned up on page change [Row 44]
+- **Problem**: Memory leaks with complex custom elements
+- **Solution**: Implement disconnectedCallback properly
+- **Code**: `disconnectedCallback() { this.cleanup(); }`
+- **Tags**: #custom-elements #memory #lifecycle
+
+### Dynamic content
+### Cannot dynamically update style attributes [Row 170]
+- **Problem**: Style object is read-only
+- **Solution**: Set individual style properties
+- **Code**: `$w('#element').style.backgroundColor = 'red'`
+- **Tags**: #style #css #dynamic
+
+### Element creation
+### Cannot dynamically create HTML elements [Row 2]
+- **Problem**: No document.createElement() equivalent in Wix Blocks
+- **Solution**: Pre-create hidden elements and show/hide them
+- **Code**: `$w('#hiddenDiv').show(); // not createElement`
+- **Tags**: #dom #elements #architecture
+
+### External scripts
+### External scripts loaded multiple times [Row 194]
+- **Problem**: Script tags re-execute on navigation
+- **Solution**: Check if already loaded
+- **Code**: `if (!window.myScriptLoaded) { loadScript(); }`
+- **Tags**: #scripts #performance #loading
+
+### General
+### Page elements not fully loaded in onReady [Row 35]
+- **Problem**: Some elements undefined when onReady fires
+- **Solution**: Use setTimeout or check element existence
+- **Code**: `if ($w('#element')) { // safe to use }`
+- **Tags**: #lifecycle #timing #onready
+
+### Html component
+### HTML iframe srcdoc property not updating dynamically [Row 32]
+- **Problem**: Setting srcdoc on iframe after initial load doesn't reflect changes
+- **Solution**: Use postMessage to communicate with iframe instead
+- **Code**: `$w('#html1').postMessage({html: newContent})`
+- **Tags**: #iframe #html #dynamic-content
+
+### Script tags stripped from HTML component [Row 33]
+- **Problem**: Cannot inject custom scripts via HTML component
+- **Solution**: Use custom element or web component approach
+- **Code**: `class MyElement extends HTMLElement {}`
+- **Tags**: #html #scripts #security
+
+### CSS :hover doesn't work in HTML component [Row 46]
+- **Problem**: Hover states ignored in sandboxed iframe
+- **Solution**: Use JavaScript mouseover/mouseout events
+- **Code**: `element.onmouseover = () => element.style.background = 'blue'`
+- **Tags**: #css #hover #html-component
+
+### postMessage fails with complex objects [Row 60]
+- **Problem**: Objects with functions or circular references fail
+- **Solution**: Stringify and parse data
+- **Code**: `postMessage(JSON.parse(JSON.stringify(data)))`
+- **Tags**: #postmessage #serialization #html
+
+### onMessage handler fires multiple times [Row 74]
+- **Problem**: Duplicate message handlers registered
+- **Solution**: Remove handler before adding
+- **Tags**: #events #postmessage #html
+
+### HTML component height cannot be dynamic [Row 88]
+- **Problem**: Must set fixed height, no auto-resize
+- **Solution**: Calculate height and set programmatically
+- **Code**: `$w('#html1').style.height = calculatedHeight + 'px'`
+- **Tags**: #html #height #responsive
+
+### Canvas element tainted by CORS [Row 92]
+- **Problem**: Cannot export canvas with external images
+- **Solution**: Proxy images through backend
+- **Code**: `const proxyUrl = await getProxyUrl(imageUrl)`
+- **Tags**: #canvas #cors #security
+
+### HTML component sandboxed from localStorage [Row 105]
+- **Problem**: No access to browser storage APIs
+- **Solution**: Use postMessage to parent for storage
+- **Tags**: #storage #sandbox #html
+
+### Media queries don't work in HTML component [Row 117]
+- **Problem**: Viewport always reports desktop size
+- **Solution**: Pass viewport size via postMessage
+- **Code**: `postMessage({viewport: {width: window.innerWidth}})`
+- **Tags**: #responsive #media-queries #html
+
+### HTML component can't access Wix APIs [Row 130]
+- **Problem**: $w not available inside HTML iframe
+- **Solution**: Use postMessage for API calls
+- **Tags**: #api #sandbox #html
+
+### Form submissions blocked in HTML component [Row 143]
+- **Problem**: Default form actions prevented
+- **Solution**: Handle with JavaScript and postMessage
+- **Code**: `form.onsubmit = (e) => { e.preventDefault(); parent.postMessage(data) }`
+- **Tags**: #forms #html #security
+
+### Print styles ignored in HTML component [Row 155]
+- **Problem**: @media print rules don't apply
+- **Solution**: Inject print styles dynamically
+- **Tags**: #print #css #html
+
+### Audio/video autoplay blocked [Row 166]
+- **Problem**: Media won't autoplay in HTML component
+- **Solution**: Require user interaction to start
+- **Code**: `button.onclick = () => video.play()`
+- **Tags**: #media #autoplay #browser
+
+### Iframe
+### Iframe sandbox attributes too restrictive [Row 56]
+- **Problem**: Cannot use payment forms in iframe
+- **Solution**: Request sandbox permissions carefully
+- **Code**: `'sandbox="allow-forms allow-scripts allow-same-origin"'`
+- **Tags**: #iframe #security #payments
+
+### Layout
+### Z-index conflicts with Wix elements [Row 103]
+- **Problem**: Custom elements appear behind Wix components
+- **Solution**: Use Wix's layer system or adjust z-index carefully
+- **Code**: `$w('#element').style.zIndex = '1000'`
+- **Tags**: #z-index #layout #styling
+
+### Preview
+### Widget props don't update in preview mode [Row 3]
+- **Problem**: Changes to widget properties not reflected until page refresh
+- **Solution**: Save and refresh entire editor after prop changes
+- **Code**: `// No code solution - manual refresh required`
+- **Tags**: #preview #props #workflow
+
+### HTML rendering different in preview vs live [Row 116]
+- **Problem**: Sandbox restrictions differ between environments
+- **Solution**: Always test on published site
+- **Tags**: #preview #html #testing
+
+### Rendering bugs
+### SVG animations cause performance issues [Row 51]
+- **Problem**: Complex SVG animations make page lag
+- **Solution**: Optimize SVG or use CSS animations
+- **Tags**: #svg #animation #performance
+
+### Repeater
+### Repeater itemData is read-only [Row 1]
+- **Problem**: Cannot modify itemData properties directly in onItemReady handler
+- **Solution**: Use spread operator to create new object
+- **Code**: `const newData = {...itemData, status: 'active'}`
+- **Tags**: #repeater #data-binding #workaround
+
+### Repeater items lose state on scroll [Row 63]
+- **Problem**: Virtual scrolling resets item state
+- **Solution**: Store state externally and restore in onItemReady
+- **Tags**: #repeater #state #scrolling
+
+### Responsive
+### CSS Grid not supported in widgets [Row 36]
+- **Problem**: Grid layout CSS ignored in widget styles
+- **Solution**: Use flexbox or absolute positioning
+- **Tags**: #css #grid #layout
+
+### State management
+### Element state lost on page navigation [Row 128]
+- **Problem**: DOM state resets between pages
+- **Solution**: Use memory/storage to persist state
+- **Code**: `wixStorage.session.setItem('elementState', JSON.stringify(state))`
+- **Tags**: #state #navigation #persistence
+
+### Style attribute
+### Style attribute conflicts with Wix styles [Row 139]
+- **Problem**: Inline styles overridden by Wix
+- **Solution**: Use !important or class-based styling
+- **Code**: `element.style.setProperty('color', 'red', 'important')`
+- **Tags**: #css #styling #conflicts
+
+### Svg
+### SVG filters don't work in widgets [Row 108]
+- **Problem**: Filter effects stripped from SVG
+- **Solution**: Use PNG with transparency
+- **Tags**: #svg #filters #graphics
+
+### Text elements
+### Text element truncation unpredictable [Row 20]
+- **Problem**: Text cutoff varies by browser/device
+- **Solution**: Implement custom truncation logic
+- **Code**: `text.slice(0, maxLength) + '...'`
+- **Tags**: #text #truncation #cross-browser
+
+### Type checking
+### TypeScript interfaces break repeater data binding [Row 7]
+- **Problem**: Interface types not recognized by repeater itemData
+- **Solution**: Use type assertions or any type
+- **Code**: `const data = itemData as MyInterface`
+- **Tags**: #typescript #repeater #types
+
+### Widget communication
+### Widgets can't communicate directly [Row 112]
+- **Problem**: No built-in widget-to-widget messaging
+- **Solution**: Use custom events or shared state
+- **Code**: `window.dispatchEvent(new CustomEvent('widgetMessage', {detail: data}))`
+- **Tags**: #widgets #communication #events
+
+### Widget styling
+### Widget CSS completely isolated in iframe [Row 5]
+- **Problem**: Cannot access parent page styles or share CSS
+- **Solution**: Duplicate styles or use inline styles
+- **Tags**: #css #iframe #isolation
+
+### Widgets
+### Widget height calculation includes margin [Row 113]
+- **Problem**: getBoundingClientRect includes margins
+- **Solution**: Calculate height without margins
+- **Code**: `element.offsetHeight // excludes margin`
+- **Tags**: #widgets #height #layout
+
+---
+
+## Medium Severity Issues
+
+### Browser sandbox
+### Content Security Policy blocks inline styles [Row 181]
+- **Problem**: CSP prevents style injection
+- **Solution**: Use classes or data URLs
+- **Tags**: #csp #security #styles
+
+### Content display
+### Rich text editor output inconsistent [Row 23]
+- **Problem**: Formatting varies between editor and display
+- **Solution**: Sanitize and normalize HTML output
+- **Code**: `sanitizeHtml(richTextContent)`
+- **Tags**: #rich-text #editor #formatting
+
+### Long text causes layout shift [Row 37]
+- **Problem**: Dynamic text loading shifts page elements
+- **Solution**: Set min-height or use skeleton screens
+- **Code**: `min-height: 100px; /* prevent shift */`
+- **Tags**: #layout #text #performance
+
+### Images don't lazy load in repeaters [Row 48]
+- **Problem**: All images load immediately
+- **Solution**: Implement intersection observer
+- **Code**: `new IntersectionObserver(entries => {...})`
+- **Tags**: #images #performance #repeater
+
+### Special characters break text display [Row 62]
+- **Problem**: Unicode characters render incorrectly
+- **Solution**: Ensure UTF-8 encoding throughout
+- **Tags**: #text #encoding #unicode
+
+### Text shadow not supported [Row 76]
+- **Problem**: text-shadow CSS property ignored
+- **Solution**: Use drop shadow filter or image
+- **Tags**: #css #text #styling
+
+### Background images not responsive [Row 89]
+- **Problem**: background-size: cover doesn't work properly
+- **Solution**: Use image element with object-fit
+- **Code**: `object-fit: cover`
+- **Tags**: #images #responsive #css
+
+### Emoji rendering inconsistent [Row 119]
+- **Problem**: Emojis appear different across devices
+- **Solution**: Use emoji font or images
+- **Tags**: #emoji #fonts #cross-platform
+
+### Custom elements
+### Custom element attributes not reactive [Row 71]
+- **Problem**: Attribute changes don't trigger updates
+- **Solution**: Use attributeChangedCallback
+- **Code**: `static get observedAttributes() { return ['data-value']; }`
+- **Tags**: #custom-elements #attributes #reactivity
+
+### Shadow DOM styling limitations [Row 121]
+- **Problem**: Can't style shadow DOM from outside
+- **Solution**: Use CSS custom properties
+- **Code**: `--my-color: var(--widget-color, blue)`
+- **Tags**: #shadow-dom #css #custom-elements
+
+### Custom element events don't bubble [Row 154]
+- **Problem**: Events trapped in shadow DOM
+- **Solution**: Re-dispatch events on host element
+- **Code**: `this.dispatchEvent(new CustomEvent('change', {bubbles: true}))`
+- **Tags**: #events #shadow-dom #custom-elements
+
+### Dynamic content
+### Content flickers on update [Row 50]
+- **Problem**: Visible redraw when changing content
+- **Solution**: Use opacity transition or double buffering
+- **Code**: `element.style.opacity = 0; updateContent(); element.style.opacity = 1;`
+- **Tags**: #performance #animation #updates
+
+### Dynamic image loading fails silently [Row 78]
+- **Problem**: No error event for failed image loads
+- **Solution**: Add error handler to image elements
+- **Code**: `img.onerror = () => handleImageError()`
+- **Tags**: #images #error-handling #dynamic
+
+### Content height animation jerky [Row 106]
+- **Problem**: Height transitions not smooth
+- **Solution**: Use max-height or transform instead
+- **Code**: `transition: max-height 0.3s ease`
+- **Tags**: #animation #performance #css
+
+### Text content updates lose selection [Row 132]
+- **Problem**: User text selection cleared on update
+- **Solution**: Save and restore selection range
+- **Tags**: #text #selection #ux
+
+### Element creation
+### Hidden elements still occupy space [Row 26]
+- **Problem**: display: none elements affect layout
+- **Solution**: Remove from DOM or use visibility
+- **Code**: `visibility: hidden; position: absolute;`
+- **Tags**: #layout #display #css
+
+### Elements created in loop share references [Row 65]
+- **Problem**: All elements point to same object
+- **Solution**: Clone or create new instances
+- **Code**: `elements.map(() => ({...template}))`
+- **Tags**: #javascript #references #bugs
+
+### Element IDs must be unique per widget [Row 91]
+- **Problem**: Duplicate IDs across widget instances
+- **Solution**: Generate unique IDs with prefix
+- **Code**: `id = widgetId + '_' + elementId`
+- **Tags**: #ids #widgets #dom
+
+### Elements added to DOM not styled [Row 134]
+- **Problem**: Dynamically added elements miss CSS
+- **Solution**: Apply styles after insertion
+- **Tags**: #css #dom #dynamic
+
+### General
+### Console.log outputs not visible in preview [Row 98]
+- **Problem**: Console messages don't appear in preview mode
+- **Solution**: Use browser DevTools or custom logger
+- **Tags**: #debugging #console #development
+
+### Html component
+### HTML component blocks popups [Row 47]
+- **Problem**: window.open() blocked by sandbox
+- **Solution**: Use parent.postMessage to request popup
+- **Tags**: #popups #sandbox #html
+
+### Local assets not accessible in HTML [Row 61]
+- **Problem**: Cannot reference widget assets
+- **Solution**: Embed as base64 or use CDN
+- **Code**: `src="data:image/png;base64,..."`
+- **Tags**: #assets #html #paths
+
+### HTML component memory leaks [Row 75]
+- **Problem**: Event listeners not cleaned up
+- **Solution**: Remove listeners before updating content
+- **Code**: `element.removeEventListener('click', handler)`
+- **Tags**: #memory #events #html
+
+### WebGL context lost in HTML component [Row 93]
+- **Problem**: 3D graphics context randomly lost
+- **Solution**: Implement context restoration
+- **Code**: `canvas.addEventListener('webglcontextlost', handleContextLost)`
+- **Tags**: #webgl #graphics #html
+
+### Keyboard events trapped in HTML component [Row 120]
+- **Problem**: Key events don't propagate to parent
+- **Solution**: Forward key events via postMessage
+- **Tags**: #keyboard #events #html
+
+### HTML component blocks file uploads [Row 131]
+- **Problem**: File input doesn't work in sandbox
+- **Solution**: Handle file selection in parent widget
+- **Tags**: #files #upload #security
+
+### CSS animations paused in background [Row 144]
+- **Problem**: Animations stop when tab not active
+- **Solution**: Use requestAnimationFrame wisely
+- **Tags**: #animation #performance #html
+
+### Touch events not normalized [Row 156]
+- **Problem**: Touch handling varies by device
+- **Solution**: Use pointer events API
+- **Code**: `element.onpointerdown = handleStart`
+- **Tags**: #touch #mobile #events
+
+### HTML component breaks back button [Row 167]
+- **Problem**: Navigation history corrupted
+- **Solution**: Avoid changing iframe src unnecessarily
+- **Tags**: #navigation #history #html
+
+### Clipboard API blocked in HTML [Row 179]
+- **Problem**: Cannot access clipboard in sandbox
+- **Solution**: Use parent widget for clipboard ops
+- **Tags**: #clipboard #security #html
+
+### Web fonts don't load in HTML component [Row 192]
+- **Problem**: @font-face rules ignored
+- **Solution**: Base64 encode fonts or use system fonts
+- **Tags**: #fonts #css #html
+
+### Html rendering
+### HTML entities decoded differently [Row 25]
+- **Problem**: &nbsp; and others render inconsistently
+- **Solution**: Use Unicode characters directly
+- **Code**: `'\u00A0' // non-breaking space`
+- **Tags**: #html #encoding #text
+
+### Iframe
+### Iframe resize observer not available [Row 58]
+- **Problem**: Cannot detect content size changes
+- **Solution**: Poll for size changes or use MutationObserver
+- **Tags**: #iframe #resize #observer
+
+### Cross-origin iframe communication fails [Row 72]
+- **Problem**: postMessage blocked by browser
+- **Solution**: Ensure proper origin checks
+- **Code**: `if (event.origin === expectedOrigin) {...}`
+- **Tags**: #iframe #cors #security
+
+### Iframe navigation breaks widget [Row 86]
+- **Problem**: User can navigate away from content
+- **Solution**: Prevent navigation or use srcdoc
+- **Code**: `iframe.sandbox = 'allow-scripts'`
+- **Tags**: #iframe #navigation #security
+
+### Iframe print function disabled [Row 100]
+- **Problem**: window.print() doesn't work in iframe
+- **Solution**: Trigger print from parent window
+- **Tags**: #iframe #print #sandbox
+
+### Iframe content cached aggressively [Row 127]
+- **Problem**: Updates don't show without hard refresh
+- **Solution**: Add cache-busting parameter
+- **Code**: `src = url + '?v=' + Date.now()`
+- **Tags**: #iframe #cache #updates
+
+### Iframe focus management broken [Row 141]
+- **Problem**: Tab navigation skips iframe content
+- **Solution**: Manage focus programmatically
+- **Tags**: #iframe #accessibility #focus
+
+### Nested iframes performance issue [Row 153]
+- **Problem**: Multiple iframe levels slow page
+- **Solution**: Flatten iframe hierarchy
+- **Tags**: #iframe #performance #architecture
+
+### Iframe fullscreen API blocked [Row 180]
+- **Problem**: Cannot enter fullscreen from iframe
+- **Solution**: Request fullscreen from parent
+- **Tags**: #iframe #fullscreen #api
+
+### Image
+### Image srcset not supported [Row 38]
+- **Problem**: Responsive images don't work with srcset
+- **Solution**: Change src based on viewport
+- **Code**: `img.src = viewport.width > 768 ? 'large.jpg' : 'small.jpg'`
+- **Tags**: #images #responsive #html
+
+### WebP images not supported everywhere [Row 122]
+- **Problem**: Some browsers don't display WebP
+- **Solution**: Provide fallback formats
+- **Tags**: #images #formats #compatibility
+
+### Layout
+### Flexbox gap property not supported [Row 90]
+- **Problem**: gap doesn't work in some browsers
+- **Solution**: Use margins on flex items
+- **Code**: `margin: 0 10px`
+- **Tags**: #flexbox #css #layout
+
+### Position sticky unreliable [Row 145]
+- **Problem**: Sticky positioning breaks in widgets
+- **Solution**: Use fixed positioning with scroll handler
+- **Tags**: #css #positioning #layout
+
+### Media queries
+### Media queries use wrong viewport [Row 79]
+- **Problem**: Always uses desktop breakpoints
+- **Solution**: Use JavaScript width detection
+- **Code**: `if (window.innerWidth < 768) { applyMobileStyles() }`
+- **Tags**: #responsive #media-queries #viewport
+
+### Print media queries ignored [Row 107]
+- **Problem**: @media print styles don't apply
+- **Solution**: Apply print styles via JavaScript
+- **Tags**: #print #media-queries #css
+
+### Container queries not supported [Row 133]
+- **Problem**: @container queries don't work
+- **Solution**: Use ResizeObserver instead
+- **Tags**: #css #container-queries #responsive
+
+### Preview
+### Preview mode uses different DOM [Row 142]
+- **Problem**: Element structure differs in preview
+- **Solution**: Test element existence before use
+- **Tags**: #preview #dom #testing
+
+### Preview console errors misleading [Row 168]
+- **Problem**: Shows errors that don't occur live
+- **Solution**: Test on published site
+- **Tags**: #preview #debugging #errors
+
+### Rendering bugs
+### Transform origin miscalculated [Row 118]
+- **Problem**: Rotation center point wrong
+- **Solution**: Set explicit transform-origin
+- **Code**: `transform-origin: 50% 50%`
+- **Tags**: #css #transform #animation
+
+### Gradient rendering pixelated [Row 157]
+- **Problem**: CSS gradients show banding
+- **Solution**: Add slight noise or use images
+- **Tags**: #css #gradients #rendering
+
+### Box shadow performance issue [Row 169]
+- **Problem**: Multiple shadows cause lag
+- **Solution**: Use single shadow or image
+- **Tags**: #css #performance #shadows
+
+### Repeater
+### Repeater virtual scrolling breaks animations [Row 77]
+- **Problem**: Items re-render losing animation state
+- **Solution**: Disable virtual scrolling or save state
+- **Tags**: #repeater #animation #scrolling
+
+### Repeater data binding ignores null [Row 104]
+- **Problem**: Null values treated as undefined
+- **Solution**: Convert null to empty string
+- **Code**: `value || ''`
+- **Tags**: #repeater #data #null
+
+### Repeater item height must be uniform [Row 129]
+- **Problem**: Variable heights cause layout issues
+- **Solution**: Use fixed heights or grid layout
+- **Tags**: #repeater #layout #height
+
+### Repeater scroll position lost [Row 195]
+- **Problem**: Scroll resets on data update
+- **Solution**: Save and restore scroll position
+- **Code**: `const scrollTop = repeater.scrollTop`
+- **Tags**: #repeater #scroll #state
+
+### Responsive
+### Viewport units unreliable [Row 52]
+- **Problem**: 100vh includes browser chrome on mobile
+- **Solution**: Use JavaScript to calculate
+- **Code**: `height: window.innerHeight + 'px'`
+- **Tags**: #css #viewport #mobile
+
+### Breakpoints don't match Wix Editor [Row 80]
+- **Problem**: Custom breakpoints ignored
+- **Solution**: Use Wix's predefined breakpoints
+- **Tags**: #responsive #breakpoints #editor
+
+### Touch targets too small on mobile [Row 94]
+- **Problem**: Elements hard to tap on phones
+- **Solution**: Minimum 44px touch targets
+- **Code**: `min-height: 44px; min-width: 44px`
+- **Tags**: #mobile #accessibility #touch
+
+### Orientation change breaks layout [Row 146]
+- **Problem**: Landscape/portrait switch issues
+- **Solution**: Handle orientationchange event
+- **Code**: `window.addEventListener('orientationchange', handleRotation)`
+- **Tags**: #mobile #orientation #layout
+
+### rem units calculated incorrectly [Row 182]
+- **Problem**: rem based on widget root not page
+- **Solution**: Use px or calculate manually
+- **Tags**: #css #units #responsive
+
+### Rich content
+### Rich text paste includes hidden formatting [Row 39]
+- **Problem**: Pasted content has invisible styles
+- **Solution**: Strip formatting on paste
+- **Code**: `event.clipboardData.getData('text/plain')`
+- **Tags**: #rich-text #paste #formatting
+
+### Rich content links not clickable [Row 135]
+- **Problem**: Links in rich text disabled
+- **Solution**: Enable links in viewer mode only
+- **Tags**: #rich-text #links #interaction
+
+### Script execution
+### Inline scripts execute out of order [Row 196]
+- **Problem**: Script timing unpredictable
+- **Solution**: Use promises or callbacks
+- **Code**: `await loadScript(url)`
+- **Tags**: #scripts #timing #async
+
+### Security
+### XSS possible through data binding [Row 64]
+- **Problem**: User input rendered as HTML
+- **Solution**: Always escape user content
+- **Code**: `textContent = userInput // not innerHTML`
+- **Tags**: #security #xss #data
+
+### CSRF tokens not validated [Row 147]
+- **Problem**: Form submissions lack CSRF protection
+- **Solution**: Implement token validation
+- **Tags**: #security #csrf #forms
+
+### Content injection via URL params [Row 158]
+- **Problem**: URL parameters inserted unsafely
+- **Solution**: Validate and sanitize all inputs
+- **Tags**: #security #validation #urls
+
+### Style attribute
+### !important doesn't override Wix styles [Row 95]
+- **Problem**: Wix styles still take precedence
+- **Solution**: Use more specific selectors
+- **Tags**: #css #specificity #important
+
+### Inline styles removed on save [Row 171]
+- **Problem**: Editor strips certain inline styles
+- **Solution**: Use classes instead of inline
+- **Tags**: #css #editor #styles
+
+### Svg
+### SVG use element broken [Row 81]
+- **Problem**: <use> references don't resolve
+- **Solution**: Inline SVG content instead
+- **Tags**: #svg #use #references
+
+### SVG masks not supported [Row 159]
+- **Problem**: mask attribute ignored
+- **Solution**: Use clip-path or PNG
+- **Tags**: #svg #masks #graphics
+
+### Text elements
+### Text gradient not supported [Row 96]
+- **Problem**: background-clip: text doesn't work
+- **Solution**: Use SVG text or images
+- **Tags**: #text #gradient #css
+
+### Text stroke renders poorly [Row 123]
+- **Problem**: -webkit-text-stroke looks bad
+- **Solution**: Use text-shadow for outline
+- **Code**: `text-shadow: -1px -1px 0 #000, 1px -1px 0 #000`
+- **Tags**: #text #stroke #css
+
+### Widget communication
+### Widget state sync delays [Row 148]
+- **Problem**: State updates not immediate
+- **Solution**: Use callbacks to confirm updates
+- **Tags**: #state #sync #widgets
+
+### Widget styling
+### Widget border-radius clipped [Row 82]
+- **Problem**: Rounded corners cut off content
+- **Solution**: Add padding or overflow: hidden
+- **Tags**: #css #border-radius #widgets
+
+### CSS variables don't cascade into widgets [Row 124]
+- **Problem**: Parent CSS custom properties not inherited
+- **Solution**: Pass via widget properties
+- **Tags**: #css #variables #inheritance
+
+### Widget background transparency issues [Row 183]
+- **Problem**: Transparent backgrounds show artifacts
+- **Solution**: Set explicit background color
+- **Tags**: #css #transparency #widgets
+
+### Widgets
+### Widget resize events unreliable [Row 59]
+- **Problem**: Resize observer misses some changes
+- **Solution**: Debounce and verify size changes
+- **Code**: `debounce(handleResize, 100)`
+- **Tags**: #widgets #resize #events
+
+### Widget destroyed without cleanup [Row 109]
+- **Problem**: Memory leaks from event listeners
+- **Solution**: Implement destroy lifecycle method
+- **Tags**: #widgets #lifecycle #memory
+
+### Widget to widget drag and drop impossible [Row 149]
+- **Problem**: No native DnD between widgets
+- **Solution**: Implement custom drag solution
+- **Tags**: #widgets #drag-drop #interaction
+
+---
+
+## Low Severity Issues
+
+### Content display
+### Tooltips cut off at widget boundary [Row 197]
+- **Problem**: Overflow hidden clips tooltips
+- **Solution**: Use portal pattern or adjust position
+- **Tags**: #tooltips #overflow #ui
+
+### Unicode arrows render differently [Row 198]
+- **Problem**: Arrow characters vary by system
+- **Solution**: Use consistent icon font
+- **Tags**: #unicode #fonts #cross-platform
+
+### Dynamic content
+### Placeholder text not consistent [Row 199]
+- **Problem**: Placeholder styling varies
+- **Solution**: Use custom placeholder implementation
+- **Tags**: #forms #placeholder #styling
+
+### Element creation
+### Element order affects z-index [Row 200]
+- **Problem**: DOM order overrides z-index values
+- **Solution**: Manage stacking context carefully
+- **Tags**: #z-index #dom #layout
+
+### Html component
+### HTML component affects SEO [Row 136]
+- **Problem**: Content not indexed by search engines
+- **Solution**: Provide fallback content
+- **Tags**: #seo #html #indexing
+
+### Performance monitoring not available [Row 184]
+- **Problem**: No access to Performance API
+- **Solution**: Implement custom timing
+- **Tags**: #performance #monitoring #api
+
+### Layout
+### Grid template areas not supported [Row 185]
+- **Problem**: Named grid areas don't work
+- **Solution**: Use numeric grid lines
+- **Tags**: #css #grid #layout
+
+### Media queries
+### Hover media query not respected [Row 160]
+- **Problem**: @media (hover: hover) ignored
+- **Solution**: Detect touch vs mouse in JS
+- **Tags**: #media-queries #hover #touch
+
+### Preview
+### Preview performance differs from live [Row 161]
+- **Problem**: Preview slower than published site
+- **Solution**: Test performance on live site
+- **Tags**: #preview #performance #testing
+
+### Repeater
+### Repeater animations not smooth [Row 186]
+- **Problem**: Jank when scrolling fast
+- **Solution**: Reduce animation complexity
+- **Tags**: #repeater #animation #performance
+
+### Responsive
+### Responsive units in calc() buggy [Row 172]
+- **Problem**: calc() with vw/vh unreliable
+- **Solution**: Calculate in JavaScript
+- **Tags**: #css #calc #responsive
+
+### Security
+### Security headers not configurable [Row 187]
+- **Problem**: Cannot set CSP headers
+- **Solution**: Work within platform constraints
+- **Tags**: #security #headers #platform
+
+### Svg
+### SVG foreignObject not supported [Row 173]
+- **Problem**: Can't embed HTML in SVG
+- **Solution**: Use pure SVG elements
+- **Tags**: #svg #foreignobject #html
+
+### Text elements
+### Letter-spacing affects width calculation [Row 188]
+- **Problem**: Text overflow with letter-spacing
+- **Solution**: Account for spacing in calculations
+- **Tags**: #text #letter-spacing #layout
+
+### Widget styling
+### Widget shadow limited options [Row 189]
+- **Problem**: Can't create inner shadows
+- **Solution**: Use gradient to simulate
+- **Tags**: #css #shadows #widgets
+
+---
+
+## Quick Reference Links
+
+- [Master CSV](../wixresearch.csv)
+- [All Categories Index](master-index.md)
+- [Quick Reference - Top Issues](quick-reference.md)
+
+## Common Patterns
+
+1. **HTML Injection**: Wix Blocks prevents direct HTML injection for security
+2. **Dynamic Elements**: Pre-create and show/hide instead of createElement
+3. **Repeater Limitations**: Use bracket notation for dynamic properties
+4. **CSS Isolation**: Widgets are sandboxed in iframes
+5. **Responsive Design**: Limited breakpoint control
+
+## Need Help?
+
+- Check the [Wix Blocks Documentation](https://dev.wix.com/docs/develop-websites/articles/wix-blocks)
+- Search the [Wix Developer Forum](https://www.wix.com/velo/forum)
+- Review the [API Reference](https://www.wix.com/velo/reference)

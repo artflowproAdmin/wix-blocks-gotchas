@@ -1,0 +1,137 @@
+# Quick Reference - Top 20 Critical Wix Blocks Gotchas
+
+## Overview
+The most critical issues you'll encounter when developing with Wix Blocks.
+
+Last updated: 2025-07-13
+
+---
+
+## Critical Issues (Must Know)
+
+### 1. HTML iframe srcdoc property not updating dynamically [Row 32]
+- **Category**: html-display
+- **Problem**: Setting srcdoc on iframe after initial load doesn't reflect changes
+- **Solution**: Use postMessage to communicate with iframe instead
+- **Code**: `$w('#html1').postMessage({html: newContent})`
+
+### 2. Script tags stripped from HTML component [Row 33]
+- **Category**: html-display
+- **Problem**: Cannot inject custom scripts via HTML component
+- **Solution**: Use custom element or web component approach
+- **Code**: `class MyElement extends HTMLElement {}`
+
+### 3. Custom elements not cleaned up on page change [Row 44]
+- **Category**: html-display
+- **Problem**: Memory leaks with complex custom elements
+- **Solution**: Implement disconnectedCallback properly
+- **Code**: `disconnectedCallback() { this.cleanup(); }`
+
+### 4. Iframe sandbox attributes too restrictive [Row 56]
+- **Category**: html-display
+- **Problem**: Cannot use payment forms in iframe
+- **Solution**: Request sandbox permissions carefully
+- **Code**: `'sandbox="allow-forms allow-scripts allow-same-origin"'`
+
+### 5. Canvas element tainted by CORS [Row 92]
+- **Category**: html-display
+- **Problem**: Cannot export canvas with external images
+- **Solution**: Proxy images through backend
+- **Code**: `const proxyUrl = await getProxyUrl(imageUrl)`
+
+### 6. Repeater itemData is read-only [Row 1]
+- **Category**: component-limitations
+- **Problem**: Cannot modify itemData properties directly in onItemReady handler
+- **Solution**: Use spread operator to create new object
+- **Code**: `const newData = {...itemData, status: 'active'}`
+
+### 7. Cannot dynamically create HTML elements [Row 2]
+- **Category**: component-limitations
+- **Problem**: No document.createElement() equivalent in Wix Blocks
+- **Solution**: Pre-create hidden elements and show/hide them
+- **Code**: `$w('#hiddenDiv').show(); // not createElement`
+
+### 8. Widget props don't update in preview mode [Row 3]
+- **Category**: development-workflow
+- **Problem**: Changes to widget properties not reflected until page refresh
+- **Solution**: Save and refresh entire editor after prop changes
+
+### 9. Widget CSS completely isolated in iframe [Row 5]
+- **Category**: component-limitations
+- **Problem**: Cannot access parent page styles or share CSS
+- **Solution**: Duplicate styles or use inline styles
+
+### 10. TypeScript interfaces break repeater data binding [Row 7]
+- **Category**: component-limitations
+- **Problem**: Interface types not recognized by repeater itemData
+- **Solution**: Use type assertions or any type
+- **Code**: `const data = itemData as MyInterface`
+
+### 11. Backend functions timeout after 14 seconds [Row 14]
+- **Category**: api-restrictions
+- **Problem**: Long-running operations fail
+- **Solution**: Break into smaller operations or use job queue
+
+### 12. No access to window object in backend [Row 15]
+- **Category**: api-restrictions
+- **Problem**: Browser APIs not available in backend code
+- **Solution**: Move browser-dependent code to frontend
+
+### 13. Cannot inject HTML into Text elements [Row 24]
+- **Category**: html-display
+- **Problem**: Text elements only accept plain text, HTML tags shown as literal text
+- **Solution**: Use HTML Component or create custom element
+- **Code**: `$w('#html1').src = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)`
+
+### 14. Collections limited to 10MB per item [Row 9]
+- **Category**: data-handling
+- **Problem**: Large data objects cannot be stored
+- **Solution**: Split data or use external storage
+
+### 15. Secrets/environment variables only in backend [Row 17]
+- **Category**: api-restrictions
+- **Problem**: No secure way to use API keys in frontend
+- **Solution**: Create backend wrapper functions
+
+### 16. Collections queries limited to 1000 items [Row 19]
+- **Category**: data-handling
+- **Problem**: Cannot retrieve more than 1000 items in single query
+- **Solution**: Implement pagination
+- **Code**: `.limit(50).skip(pageNum * 50)`
+
+### 17. Page elements not fully loaded in onReady [Row 35]
+- **Category**: html-display
+- **Problem**: Some elements undefined when onReady fires
+- **Solution**: Use setTimeout or check element existence
+- **Code**: `if ($w('#element')) { // safe to use }`
+
+### 18. External scripts loaded multiple times [Row 194]
+- **Category**: html-display
+- **Problem**: Script tags re-execute on navigation
+- **Solution**: Check if already loaded
+- **Code**: `if (!window.myScriptLoaded) { loadScript(); }`
+
+### 19. No WebSocket support [Row 41]
+- **Category**: api-restrictions
+- **Problem**: Cannot use WebSocket connections
+- **Solution**: Use HTTP polling or Server-Sent Events
+
+### 20. Limited CORS support for external APIs [Row 4]
+- **Category**: api-restrictions
+- **Problem**: Cannot call external APIs from frontend due to CORS
+- **Solution**: Use backend as proxy with wix-fetch
+
+## Common Patterns to Avoid
+
+1. **Don't try to inject HTML** - Use HTML Component with data URLs
+2. **Don't use document.createElement()** - Pre-create and show/hide elements
+3. **Don't expect global CSS** - Widgets are isolated in iframes
+4. **Don't modify repeater itemData directly** - Use spread operator
+5. **Don't rely on preview mode** - Test in published sites
+
+## Quick Links
+
+- [Display Methods Issues](display-methods.md)
+- [Component Limitations](component-limitations.md)
+- [API Restrictions](api-restrictions.md)
+- [Master Index](master-index.md)

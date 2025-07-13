@@ -1,0 +1,429 @@
+# Component Limitations Gotchas
+
+## Overview
+Total issues: 56
+High severity: 13 | Medium: 36 | Low: 7
+
+Limitations and restrictions on Wix Blocks components, including repeaters, elements, and widget behavior.
+
+Last updated: 2025-07-13
+
+---
+
+## Table of Contents
+- [Element creation](#element-creation) (5 issues)
+- [General](#general) (2 issues)
+- [Multi-state box](#multi-state-box) (2 issues)
+- [Panels](#panels) (2 issues)
+- [Repeater](#repeater) (6 issues)
+- [State management](#state-management) (1 issues)
+- [Type checking](#type-checking) (1 issues)
+- [Widget communication](#widget-communication) (1 issues)
+- [Widget properties](#widget-properties) (3 issues)
+- [Widget size](#widget-size) (4 issues)
+- [Widget styling](#widget-styling) (4 issues)
+- [Widgets](#widgets) (25 issues)
+
+---
+
+## High Severity Issues
+
+### Element creation
+### Cannot dynamically create HTML elements [Row 2]
+- **Problem**: No document.createElement() equivalent in Wix Blocks
+- **Solution**: Pre-create hidden elements and show/hide them
+- **Code**: `$w('#hiddenDiv').show(); // not createElement`
+- **Tags**: #dom #elements #architecture
+
+### General
+### Page elements not fully loaded in onReady [Row 35]
+- **Problem**: Some elements undefined when onReady fires
+- **Solution**: Use setTimeout or check element existence
+- **Code**: `if ($w('#element')) { // safe to use }`
+- **Tags**: #lifecycle #timing #onready
+
+### Repeater
+### Repeater itemData is read-only [Row 1]
+- **Problem**: Cannot modify itemData properties directly in onItemReady handler
+- **Solution**: Use spread operator to create new object
+- **Code**: `const newData = {...itemData, status: 'active'}`
+- **Tags**: #repeater #data-binding #workaround
+
+### Repeater items lose state on scroll [Row 63]
+- **Problem**: Virtual scrolling resets item state
+- **Solution**: Store state externally and restore in onItemReady
+- **Tags**: #repeater #state #scrolling
+
+### State management
+### Element state lost on page navigation [Row 128]
+- **Problem**: DOM state resets between pages
+- **Solution**: Use memory/storage to persist state
+- **Code**: `wixStorage.session.setItem('elementState', JSON.stringify(state))`
+- **Tags**: #state #navigation #persistence
+
+### Type checking
+### TypeScript interfaces break repeater data binding [Row 7]
+- **Problem**: Interface types not recognized by repeater itemData
+- **Solution**: Use type assertions or any type
+- **Code**: `const data = itemData as MyInterface`
+- **Tags**: #typescript #repeater #types
+
+### Widget communication
+### Widgets can't communicate directly [Row 112]
+- **Problem**: No built-in widget-to-widget messaging
+- **Solution**: Use custom events or shared state
+- **Code**: `window.dispatchEvent(new CustomEvent('widgetMessage', {detail: data}))`
+- **Tags**: #widgets #communication #events
+
+### Widget styling
+### Widget CSS completely isolated in iframe [Row 5]
+- **Problem**: Cannot access parent page styles or share CSS
+- **Solution**: Duplicate styles or use inline styles
+- **Tags**: #css #iframe #isolation
+
+### Widgets
+### Widget height calculation includes margin [Row 113]
+- **Problem**: getBoundingClientRect includes margins
+- **Solution**: Calculate height without margins
+- **Code**: `element.offsetHeight // excludes margin`
+- **Tags**: #widgets #height #layout
+
+### Widget settings panel can't access backend [Row 8]
+- **Problem**: Settings panel runs in different context
+- **Solution**: Use postMessage or properties
+- **Tags**: #settings #backend #communication
+
+### Widget API calls fail in preview [Row 10]
+- **Problem**: Backend functions not available in preview
+- **Solution**: Mock data for preview mode
+- **Code**: `if (wixWindow.viewMode === 'Preview') { return mockData }`
+- **Tags**: #api #preview #widgets
+
+### Widget can't detect parent page events [Row 12]
+- **Problem**: Page events don't propagate to widget iframe
+- **Solution**: Use postMessage from page code
+- **Tags**: #events #iframe #communication
+
+### Widget memory not freed on removal [Row 13]
+- **Problem**: Event listeners and timers persist
+- **Solution**: Implement cleanup in onDispose
+- **Code**: `export function onDispose() { clearInterval(timer) }`
+- **Tags**: #memory #lifecycle #widgets
+
+---
+
+## Medium Severity Issues
+
+### Element creation
+### Hidden elements still occupy space [Row 26]
+- **Problem**: display: none elements affect layout
+- **Solution**: Remove from DOM or use visibility
+- **Code**: `visibility: hidden; position: absolute;`
+- **Tags**: #layout #display #css
+
+### Elements created in loop share references [Row 65]
+- **Problem**: All elements point to same object
+- **Solution**: Clone or create new instances
+- **Code**: `elements.map(() => ({...template}))`
+- **Tags**: #javascript #references #bugs
+
+### Element IDs must be unique per widget [Row 91]
+- **Problem**: Duplicate IDs across widget instances
+- **Solution**: Generate unique IDs with prefix
+- **Code**: `id = widgetId + '_' + elementId`
+- **Tags**: #ids #widgets #dom
+
+### Elements added to DOM not styled [Row 134]
+- **Problem**: Dynamically added elements miss CSS
+- **Solution**: Apply styles after insertion
+- **Tags**: #css #dom #dynamic
+
+### General
+### Console.log outputs not visible in preview [Row 98]
+- **Problem**: Console messages don't appear in preview mode
+- **Solution**: Use browser DevTools or custom logger
+- **Tags**: #debugging #console #development
+
+### Multi-state box
+### Multi-state box transitions not smooth [Row 49]
+- **Problem**: State changes cause visual jump
+- **Solution**: Use CSS transitions between states
+- **Tags**: #multi-state #animation #ui
+
+### Multi-state box state lost on data refresh [Row 125]
+- **Problem**: Returns to default state unexpectedly
+- **Solution**: Save and restore state explicitly
+- **Tags**: #multi-state #state #bug
+
+### Panels
+### Panel collapse state not persistent [Row 53]
+- **Problem**: Panels reset to default on page load
+- **Solution**: Store state in session storage
+- **Tags**: #panels #state #ux
+
+### Accordion panels can't be controlled programmatically [Row 137]
+- **Problem**: No API to expand/collapse panels
+- **Solution**: Simulate click events
+- **Tags**: #accordion #panels #api
+
+### Repeater
+### Repeater virtual scrolling breaks animations [Row 77]
+- **Problem**: Items re-render losing animation state
+- **Solution**: Disable virtual scrolling or save state
+- **Tags**: #repeater #animation #scrolling
+
+### Repeater data binding ignores null [Row 104]
+- **Problem**: Null values treated as undefined
+- **Solution**: Convert null to empty string
+- **Code**: `value || ''`
+- **Tags**: #repeater #data #null
+
+### Repeater item height must be uniform [Row 129]
+- **Problem**: Variable heights cause layout issues
+- **Solution**: Use fixed heights or grid layout
+- **Tags**: #repeater #layout #height
+
+### Repeater scroll position lost [Row 195]
+- **Problem**: Scroll resets on data update
+- **Solution**: Save and restore scroll position
+- **Code**: `const scrollTop = repeater.scrollTop`
+- **Tags**: #repeater #scroll #state
+
+### Widget properties
+### Widget property changes don't trigger re-render [Row 40]
+- **Problem**: UI doesn't update when props change
+- **Solution**: Manually update in onPropsChanged
+- **Code**: `export function onPropsChanged(oldProps, newProps) {...}`
+- **Tags**: #props #rendering #widgets
+
+### Complex widget properties cause performance issues [Row 66]
+- **Problem**: Large objects in props slow editor
+- **Solution**: Use simple types or external storage
+- **Tags**: #props #performance #widgets
+
+### Widget default property values ignored [Row 190]
+- **Problem**: Defaults not applied on first load
+- **Solution**: Set defaults in widget code
+- **Tags**: #props #defaults #widgets
+
+### Widget size
+### Widget minimum size constraints ignored [Row 54]
+- **Problem**: Users can resize below minimum
+- **Solution**: Enforce minimums in code
+- **Code**: `if (width < 200) width = 200`
+- **Tags**: #sizing #constraints #widgets
+
+### Widget aspect ratio not maintained [Row 67]
+- **Problem**: Resize doesn't preserve ratio
+- **Solution**: Calculate and enforce ratio
+- **Tags**: #sizing #aspect-ratio #widgets
+
+### Widget size units inconsistent [Row 110]
+- **Problem**: px vs % behave differently
+- **Solution**: Stick to one unit type
+- **Tags**: #sizing #units #widgets
+
+### Widget overflow hidden cuts off content [Row 126]
+- **Problem**: No scroll option for overflowing content
+- **Solution**: Implement custom scrolling
+- **Tags**: #overflow #scrolling #widgets
+
+### Widget styling
+### Widget border-radius clipped [Row 82]
+- **Problem**: Rounded corners cut off content
+- **Solution**: Add padding or overflow: hidden
+- **Tags**: #css #border-radius #widgets
+
+### CSS variables don't cascade into widgets [Row 124]
+- **Problem**: Parent CSS custom properties not inherited
+- **Solution**: Pass via widget properties
+- **Tags**: #css #variables #inheritance
+
+### Widget background transparency issues [Row 183]
+- **Problem**: Transparent backgrounds show artifacts
+- **Solution**: Set explicit background color
+- **Tags**: #css #transparency #widgets
+
+### Widgets
+### Widget lifecycle methods called multiple times [Row 11]
+- **Problem**: onReady fired more than once
+- **Solution**: Use flag to track initialization
+- **Code**: `if (initialized) return; initialized = true;`
+- **Tags**: #lifecycle #initialization #widgets
+
+### Widget render blocked by parent [Row 21]
+- **Problem**: Parent element hidden blocks widget
+- **Solution**: Check parent visibility
+- **Tags**: #rendering #visibility #widgets
+
+### Widget scripts load order unpredictable [Row 22]
+- **Problem**: Dependencies may load after widget
+- **Solution**: Use dynamic imports
+- **Code**: `const lib = await import('library')`
+- **Tags**: #loading #dependencies #widgets
+
+### Widget crashes affect entire page [Row 27]
+- **Problem**: Unhandled errors break page
+- **Solution**: Wrap code in try-catch blocks
+- **Tags**: #error-handling #stability #widgets
+
+### Widget data binding one-way only [Row 28]
+- **Problem**: Can't update parent from widget
+- **Solution**: Use events or callbacks
+- **Tags**: #data-binding #communication #widgets
+
+### Widget preview differs from live [Row 29]
+- **Problem**: Behavior changes when published
+- **Solution**: Test in all environments
+- **Tags**: #preview #testing #widgets
+
+### Widget can't access page URL [Row 30]
+- **Problem**: No access to browser location
+- **Solution**: Pass URL as property
+- **Tags**: #navigation #security #widgets
+
+### Widget state shared between instances [Row 42]
+- **Problem**: Multiple widgets share variables
+- **Solution**: Use instance-specific storage
+- **Tags**: #state #instances #widgets
+
+### Widget animations blocked by browser [Row 43]
+- **Problem**: Performance throttling affects animations
+- **Solution**: Use CSS animations when possible
+- **Tags**: #animation #performance #widgets
+
+### Widget focus trapped inside [Row 55]
+- **Problem**: Tab key doesn't leave widget
+- **Solution**: Implement focus management
+- **Tags**: #accessibility #focus #widgets
+
+### Widget z-index conflicts [Row 68]
+- **Problem**: Layering issues with page elements
+- **Solution**: Use relative positioning
+- **Tags**: #z-index #layout #widgets
+
+### Widget drag and drop limited [Row 69]
+- **Problem**: Can't drag between widgets
+- **Solution**: Implement custom DnD logic
+- **Tags**: #drag-drop #interaction #widgets
+
+### Widget print styles ignored [Row 83]
+- **Problem**: @media print doesn't work
+- **Solution**: Apply print styles inline
+- **Tags**: #print #css #widgets
+
+### Widget touch events inconsistent [Row 84]
+- **Problem**: Mobile interactions vary
+- **Solution**: Use pointer events
+- **Tags**: #touch #mobile #widgets
+
+### Widget clipboard access blocked [Row 97]
+- **Problem**: Can't read/write clipboard
+- **Solution**: Use browser permissions API
+- **Tags**: #clipboard #security #widgets
+
+### Widget file uploads restricted [Row 111]
+- **Problem**: Limited file type support
+- **Solution**: Validate types in backend
+- **Tags**: #files #upload #widgets
+
+### Widget tooltips cut off [Row 138]
+- **Problem**: Overflow hidden clips tooltips
+- **Solution**: Position tooltips carefully
+- **Tags**: #tooltips #overflow #widgets
+
+### Widget keyboard shortcuts conflict [Row 151]
+- **Problem**: Shortcuts interfere with page
+- **Solution**: Namespace key handlers
+- **Tags**: #keyboard #shortcuts #widgets
+
+### Widget resize events throttled [Row 162]
+- **Problem**: Resize handler called infrequently
+- **Solution**: Use ResizeObserver
+- **Tags**: #resize #events #widgets
+
+### Widget destroyed without cleanup [Row 109]
+- **Problem**: Memory leaks from event listeners
+- **Solution**: Implement destroy lifecycle method
+- **Tags**: #widgets #lifecycle #memory
+
+### Widget to widget drag and drop impossible [Row 149]
+- **Problem**: No native DnD between widgets
+- **Solution**: Implement custom drag solution
+- **Tags**: #widgets #drag-drop #interaction
+
+### Widget fullscreen mode unavailable [Row 163]
+- **Problem**: No fullscreen API access
+- **Solution**: Maximize within constraints
+- **Tags**: #fullscreen #api #widgets
+
+### Widget context menu customization limited [Row 174]
+- **Problem**: Can't override right-click menu
+- **Solution**: Use custom menu UI
+- **Tags**: #context-menu #ui #widgets
+
+### Widget accessibility attributes ignored [Row 191]
+- **Problem**: ARIA labels not applied
+- **Solution**: Set attributes dynamically
+- **Tags**: #accessibility #aria #widgets
+
+### Widget scroll events not captured [Row 164]
+- **Problem**: Parent scroll events missed
+- **Solution**: Listen on window object
+- **Tags**: #scroll #events #widgets
+
+### Widget can't detect page visibility [Row 175]
+- **Problem**: No visibility change events
+- **Solution**: Use Page Visibility API
+- **Tags**: #visibility #events #widgets
+
+---
+
+## Low Severity Issues
+
+### Element creation
+### Element order affects z-index [Row 200]
+- **Problem**: DOM order overrides z-index values
+- **Solution**: Manage stacking context carefully
+- **Tags**: #z-index #dom #layout
+
+### Repeater
+### Repeater animations not smooth [Row 186]
+- **Problem**: Jank when scrolling fast
+- **Solution**: Reduce animation complexity
+- **Tags**: #repeater #animation #performance
+
+### Widget size
+### Widget resize handle hard to grab [Row 176]
+- **Problem**: Resize area too small
+- **Solution**: User education
+- **Tags**: #ui #resize #widgets
+
+### Widgets
+### Widget ID generation not unique [Row 152]
+- **Problem**: Occasional ID collisions
+- **Solution**: Use crypto.randomUUID()
+- **Tags**: #ids #bugs #widgets
+
+### Widget export format limited [Row 165]
+- **Problem**: Can only export as specific types
+- **Solution**: Convert data as needed
+- **Tags**: #export #data #widgets
+
+### Widget metadata not accessible [Row 177]
+- **Problem**: Can't read widget version/info
+- **Solution**: Store in properties
+- **Tags**: #metadata #widgets
+
+### Widget performance metrics unavailable [Row 193]
+- **Problem**: No built-in performance monitoring
+- **Solution**: Implement custom metrics
+- **Tags**: #performance #monitoring #widgets
+
+---
+
+## Quick Reference Links
+
+- [Master CSV](../wixresearch.csv)
+- [All Categories Index](master-index.md)
+- [Quick Reference - Top Issues](quick-reference.md)
